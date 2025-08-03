@@ -1,15 +1,15 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ButtonComponent } from '../button/button.component';
-import { InputComponent } from '../input/input.component';
-import { BadgeComponent } from '../badge/badge.component';
+import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { ButtonComponent } from "../button/button.component";
+import { InputComponent } from "../input/input.component";
+import { BadgeComponent } from "../badge/badge.component";
 
 export interface TableColumn {
   key: string;
   label: string;
   sortable?: boolean;
   width?: string;
-  type?: 'text' | 'number' | 'date' | 'status' | 'currency' | 'custom';
+  type?: "text" | "number" | "date" | "status" | "currency" | "custom";
   customTemplate?: string;
 }
 
@@ -17,17 +17,17 @@ export interface TableAction {
   label: string;
   icon?: string;
   action: (item: any) => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
   disabled?: (item: any) => boolean;
 }
 
 export interface SortState {
   column: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 @Component({
-  selector: 'app-data-table',
+  selector: "app-data-table",
   standalone: true,
   imports: [CommonModule, ButtonComponent, InputComponent, BadgeComponent],
   template: `
@@ -263,15 +263,15 @@ export interface SortState {
 export class DataTableComponent implements OnInit {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
-  @Input() title = '';
-  @Input() subtitle = '';
+  @Input() title = "";
+  @Input() subtitle = "";
   @Input() loading = false;
   @Input() searchable = true;
   @Input() selectable = false;
   @Input() paginated = true;
   @Input() pageSize = 10;
-  @Input() emptyMessage = '';
-  @Input() emptySubMessage = '';
+  @Input() emptyMessage = "";
+  @Input() emptySubMessage = "";
   @Input() headerActions: TableAction[] = [];
   @Input() rowActions: TableAction[] = [];
 
@@ -280,7 +280,7 @@ export class DataTableComponent implements OnInit {
   @Output() selectionChange = new EventEmitter<any[]>();
   @Output() pageChange = new EventEmitter<number>();
 
-  searchTerm = '';
+  searchTerm = "";
   sortState: SortState | null = null;
   selectedItems = new Set<any>();
   currentPage = 1;
@@ -291,35 +291,43 @@ export class DataTableComponent implements OnInit {
 
   get filteredData(): any[] {
     let filtered = [...this.data];
-    
+
     // Apply search filter
     if (this.searchTerm) {
-      filtered = filtered.filter(item => 
-        this.columns.some(column => {
+      filtered = filtered.filter((item) =>
+        this.columns.some((column) => {
           const value = this.getNestedProperty(item, column.key);
-          return value && value.toString().toLowerCase().includes(this.searchTerm.toLowerCase());
-        })
+          return (
+            value &&
+            value
+              .toString()
+              .toLowerCase()
+              .includes(this.searchTerm.toLowerCase())
+          );
+        }),
       );
     }
-    
+
     // Apply sorting
     if (this.sortState) {
       filtered.sort((a, b) => {
         const aValue = this.getNestedProperty(a, this.sortState!.column);
         const bValue = this.getNestedProperty(b, this.sortState!.column);
-        
-        if (aValue < bValue) return this.sortState!.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return this.sortState!.direction === 'asc' ? 1 : -1;
+
+        if (aValue < bValue)
+          return this.sortState!.direction === "asc" ? -1 : 1;
+        if (aValue > bValue)
+          return this.sortState!.direction === "asc" ? 1 : -1;
         return 0;
       });
     }
-    
+
     return filtered;
   }
 
   get paginatedData(): any[] {
     if (!this.paginated) return this.filteredData;
-    
+
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     return this.filteredData.slice(startIndex, endIndex);
@@ -345,18 +353,18 @@ export class DataTableComponent implements OnInit {
     const pages = [];
     const maxVisible = 5;
     const half = Math.floor(maxVisible / 2);
-    
+
     let start = Math.max(1, this.currentPage - half);
     let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
@@ -368,44 +376,62 @@ export class DataTableComponent implements OnInit {
   }
 
   get allSelected(): boolean {
-    return this.paginatedData.length > 0 && this.paginatedData.every(item => this.selectedItems.has(item));
+    return (
+      this.paginatedData.length > 0 &&
+      this.paginatedData.every((item) => this.selectedItems.has(item))
+    );
   }
 
   get someSelected(): boolean {
-    return this.paginatedData.some(item => this.selectedItems.has(item)) && !this.allSelected;
+    return (
+      this.paginatedData.some((item) => this.selectedItems.has(item)) &&
+      !this.allSelected
+    );
   }
 
   getNestedProperty(obj: any, path: string): any {
-    return path.split('.').reduce((current, prop) => current?.[prop], obj);
+    return path.split(".").reduce((current, prop) => current?.[prop], obj);
   }
 
-  getStatusVariant(status: string): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' {
+  getStatusVariant(
+    status: string,
+  ):
+    | "default"
+    | "primary"
+    | "secondary"
+    | "success"
+    | "warning"
+    | "error"
+    | "info" {
     const statusMap: { [key: string]: any } = {
-      'published': 'success',
-      'draft': 'warning',
-      'pending': 'info',
-      'rejected': 'error',
-      'active': 'success',
-      'inactive': 'secondary',
-      'completed': 'success',
-      'processing': 'info',
-      'failed': 'error'
+      published: "success",
+      draft: "warning",
+      pending: "info",
+      rejected: "error",
+      active: "success",
+      inactive: "secondary",
+      completed: "success",
+      processing: "info",
+      failed: "error",
     };
-    
-    return statusMap[status?.toLowerCase()] || 'default';
+
+    return statusMap[status?.toLowerCase()] || "default";
   }
 
   getIcon(iconName: string): string {
     const icons: { [key: string]: string } = {
       edit: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />',
-      delete: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />',
+      delete:
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />',
       view: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />',
-      download: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />',
+      download:
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />',
       plus: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />',
-      filter: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />',
+      filter:
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />',
     };
-    
-    return `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">${icons[iconName] || ''}</svg>`;
+
+    return `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">${icons[iconName] || ""}</svg>`;
   }
 
   onSearch(term: string): void {
@@ -416,18 +442,19 @@ export class DataTableComponent implements OnInit {
 
   toggleSort(columnKey: string): void {
     if (this.sortState?.column === columnKey) {
-      this.sortState.direction = this.sortState.direction === 'asc' ? 'desc' : 'asc';
+      this.sortState.direction =
+        this.sortState.direction === "asc" ? "desc" : "asc";
     } else {
-      this.sortState = { column: columnKey, direction: 'asc' };
+      this.sortState = { column: columnKey, direction: "asc" };
     }
     this.sortChange.emit(this.sortState);
   }
 
   toggleSelectAll(): void {
     if (this.allSelected) {
-      this.paginatedData.forEach(item => this.selectedItems.delete(item));
+      this.paginatedData.forEach((item) => this.selectedItems.delete(item));
     } else {
-      this.paginatedData.forEach(item => this.selectedItems.add(item));
+      this.paginatedData.forEach((item) => this.selectedItems.add(item));
     }
     this.selectionChange.emit(Array.from(this.selectedItems));
   }
